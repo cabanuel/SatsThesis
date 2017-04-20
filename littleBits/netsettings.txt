@@ -1,0 +1,5 @@
+iptables -L -vnx
+
+#CHANGE TO 1
+sysctl net.ipv4.ip_forward
+
