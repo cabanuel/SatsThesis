@@ -1,17 +1,20 @@
 import struct
 
 
-string = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()\x00.,'
+string = '\x00abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()\x00.,'
 padlong = 111111111111111111111111111111111111111111111111111111111111111111111111111111
 
 message = list(string)
 pad = list(str(padlong))
 
+pad[0] = '?'
+
+print(pad[0])
 # message = ['}','B','B','B','B','B','B','B','B','B']
 # pad = ['}','1','1','1','1','1','1','1','1','1']
 encryptedMessage = []
 decryptedMessage = []
-# encryptedMessageRcvd = []
+encryptedMessageRcvd = []
 
 for m,p in zip(message,pad):
 	cipher = (ord(m)^ord(p))
@@ -26,6 +29,11 @@ print(packedencryptedMessage)
 print('\n')
 
 unpackedencryptedMessage = struct.unpack("{0:d}B".format(messageLen), packedencryptedMessage)
+
+
+encryptedMessageRcvd = list(unpackedencryptedMessage)
+
+
 
 print(unpackedencryptedMessage)
 
@@ -55,11 +63,11 @@ f.close
 
  
 
-# for e,p in zip(encryptedMessageRcvd,pad):
-# 	# e = binascii.b2a_base64(e)
-# 	plaintext = chr(ord(e)^ord(p))
-# 	decryptedMessage.append(plaintext)
-# print(decryptedMessage)
+for e,p in zip(encryptedMessageRcvd,pad):
+	# e = binascii.b2a_base64(e)
+	plaintext = chr(e^ord(p))
+	decryptedMessage.append(plaintext)
+print(decryptedMessage)
 
 
 
