@@ -1,5 +1,5 @@
 import struct
-
+import sys
 
 string = '\x00abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()\x00.,'
 padlong = 111111111111111111111111111111111111111111111111111111111111111111111111111111
@@ -34,8 +34,9 @@ unpackedencryptedMessage = struct.unpack("{0:d}B".format(messageLen), packedencr
 encryptedMessageRcvd = list(unpackedencryptedMessage)
 
 
-
 print(unpackedencryptedMessage)
+
+
 
 
 if (list(unpackedencryptedMessage) == encryptedMessage):
@@ -45,14 +46,44 @@ else:
 	print('does not work')
 
 
+
+
 f = open('cipher.txt','wb')
 # encryptedMessage = bytes(encryptedMessage)
 f.write(packedencryptedMessage)
-f.close
+f.close()
 
-# f = open('cipher.txt','rb')
-# encryptedMessageRcvd = f.read()
-# print(encryptedMessageRcvd)
+
+f = open('cipher.txt','rb')
+encryptedMessageRead = f.read()
+f.close()
+print(encryptedMessageRead)
+
+
+
+
+print('@'*80)
+print('len :',messageLen)
+print('@'*80)
+test = len(packedencryptedMessage)
+print('test: ', test)
+
+unpackedencryptedMessage = struct.unpack("{0:d}B".format(messageLen), encryptedMessageRead)
+
+
+
+
+if (list(unpackedencryptedMessage) == encryptedMessage):
+	print('read write it works')
+
+else:
+	print('read write does not work')
+
+
+unpackedencryptedMessageList = list(unpackedencryptedMessage)
+
+
+
 
 
 
@@ -68,7 +99,13 @@ for e,p in zip(encryptedMessageRcvd,pad):
 	plaintext = chr(e^ord(p))
 	decryptedMessage.append(plaintext)
 print(decryptedMessage)
+print('*'*40)
 
+for e,p in zip(unpackedencryptedMessageList,pad):
+	# e = binascii.b2a_base64(e)
+	plaintext = chr(e^ord(p))
+	decryptedMessage.append(plaintext)
+print(decryptedMessage)
 
 
 # >>> struct.unpack("{0:d}i".format(numelements),buf)
