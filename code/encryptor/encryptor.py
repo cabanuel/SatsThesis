@@ -16,6 +16,12 @@ encryptedMessage = []
 decryptedMessage = []
 encryptedMessageRcvd = []
 
+
+for i in range(len(zip(message, pad))):
+	message[i] = ('1')
+print(message)
+
+
 for m,p in zip(message,pad):
 	cipher = (ord(m)^ord(p))
 	encryptedMessage.append(cipher)

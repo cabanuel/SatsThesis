@@ -20,7 +20,7 @@ def encryptMessage(message, pad, encryptedMsg):
 	for m,p in zip(message,pad):
 		cipher = (ord(m)^ord(p))
 		encryptedMsg.append(cipher)
-	print(encryptedMsg)
+	print('inside encrypt func: ',encryptedMsg)
 	return
 
 def packMessage(encryptedMsg):
@@ -46,6 +46,23 @@ def unpackMessage(packedEncryptedMsg):
 	messageLen = len(packedEncryptedMsg)
 	unpackedencryptedMessage = struct.unpack("{0:d}B".format(messageLen), packedEncryptedMsg)
 	return unpackedencryptedMessage
+
+def unpack_ParseMessage(encryptedMsgRead):
+	unpackedencryptedMessage = unpackMessage(encryptedMsgRead)
+	unpackedencryptedMessageList = list(unpackedencryptedMessage)
+	return unpackedencryptedMessageList
+
+def decryptMessage(unpackedencryptedMessageList,pad):
+	decryptedMessage = []
+	for e,p in zip(unpackedencryptedMessageList,pad):
+		clearText = chr(e ^ ord(p))
+		decryptedMessage.append(clearText)
+	return decryptedMessage
+
+
+
+
+
 
 def main():
 	# *********************************************************************************************************************
@@ -87,7 +104,11 @@ def main():
 	encryptedMsgRead = readPackedMsg()
 
 	# unpack message read
-	unpackedencryptedMessage = unpackMessage(encryptedMsgRead)
+	encryptedMsgRcvd = unpack_ParseMessage(encryptedMsgRead)
+
+	# decrypt the message
+	decryptedMsg = decryptMessage(encryptedMsgRcvd, pad)
+
 
 
 
@@ -106,8 +127,9 @@ def main():
 	print('*'*40)
 	print('encryptedMessageRead :', encryptedMsgRead)
 	print('*'*40)
-	print('unpackedencryptedMessage :', unpackedencryptedMessage)
+	print('encryptedMsgRcvd :', encryptedMsgRcvd)
 	print('*'*40)
+	print('decryptedMessage :', decryptedMsg)
 	print('*'*40)
 
 
