@@ -12,16 +12,16 @@ import struct
 
 
 
-def encryptMessage(message, pad, encryptedMsg):
+def encryptMessage(message, pad):
 	# *********************************************************************************************************************
 	# Encrypt the message and print it to console for verification
 	# *********************************************************************************************************************
-
+	encryptedMsg =[]
 	for m,p in zip(message,pad):
 		cipher = (ord(m)^ord(p))
 		encryptedMsg.append(cipher)
 	print('inside encrypt func: ',encryptedMsg)
-	return
+	return encryptedMsg
 
 def packMessage(encryptedMsg):
 	messageLen = len(encryptedMsg)
@@ -39,7 +39,6 @@ def readPackedMsg():
 	f = open('cipher.txt','rb')
 	encryptedMsgRead = f.read()
 	f.close()
-	print(encryptedMsgRead)
 	return encryptedMsgRead
 
 def unpackMessage(packedEncryptedMsg):
@@ -92,7 +91,7 @@ def main():
 	encryptedMsgRcvd = []
 
 	# encrypt message
-	encryptMessage(message,pad,encryptedMsg)
+	encryptedMsg = encryptMessage(message,pad)
 
 	# pack the message
 	packedEncryptedMsg = packMessage(encryptedMsg)
