@@ -109,12 +109,9 @@ def main():
 	decryptedMsg = decryptMessage(encryptedMsgRcvd, pad)
 
 
-
-
-
-
-
-
+# next thing is take a byte and do a random number mod 8, set that to be the poistion on binary string and convert
+# it to array of 0s and 1s. If the element is a 0, conver to 1, and vice versa. add logic to randomly change things to burst
+# add logic for only  single bit change, and add logic for combo
 
 
 	print('*'*40)
