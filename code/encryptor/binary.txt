@@ -1,0 +1,19 @@
+mport binascii
+>>> bin(int(binascii.hexlify('A'),16))
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: a bytes-like object is required, not 'str'
+>>> bin(int.from_bytes('A'.encode(), 'big')
+... 
+... )
+'0b1000001'
+>>> test = bin(int.from_bytes('A'.encode(), 'big'))
+>>> print(test)
+0b1000001
+>>> list(test)
+['0', 'b', '1', '0', '0', '0', '0', '0', '1']
+>>> n = int(test, 2)
+>>> n
+65
+>>> 
+
