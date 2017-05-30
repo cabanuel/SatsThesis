@@ -1,5 +1,5 @@
 import struct
-
+import binascii
 
 # # *********************************************************************************************************************
 # # Packing to bytes because len of int = 4 bytes, len of char = 1 byte
@@ -20,7 +20,7 @@ def encryptMessage(message, pad):
 	for m,p in zip(message,pad):
 		cipher = (ord(m)^ord(p))
 		encryptedMsg.append(cipher)
-	print('inside encrypt func: ',encryptedMsg)
+	# print('inside encrypt func: ',encryptedMsg)
 	return encryptedMsg
 
 def packMessage(encryptedMsg):
@@ -101,6 +101,7 @@ def main():
 
 	# read packed message from file
 	encryptedMsgRead = readPackedMsg()
+	print('Before errors introduced: ',encryptedMsgRead)
 
 	# unpack message read
 	encryptedMsgRcvd = unpack_ParseMessage(encryptedMsgRead)

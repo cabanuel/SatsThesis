@@ -17,3 +17,40 @@ TypeError: a bytes-like object is required, not 'str'
 65
 >>> 
 
+
+
+
+
+t140197:encryptor$ ls
+binary.txt		cipher.txt		encryptor.py		encryptorMkII.py
+it140197:encryptor$ python
+Python 3.5.2 |Anaconda 4.2.0 (x86_64)| (default, Jul  2 2016, 17:52:12) 
+[GCC 4.2.1 Compatible Apple LLVM 4.2 (clang-425.0.28)] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+>>> f = open('cipher.txt','rb')
+>>> f
+<_io.BufferedReader name='cipher.txt'>
+>>> msg = f.read()
+>>> msg
+b'1PSRUTWVYX[Z]\\_^A@CBEDGFIHKpsrutwvyx{z}|\x7f~a`cbedgfihk\x00\x03\x02\x05\x04\x07\x06\t\x08\x01\x10q\x12\x15\x14o\x17\x1b\x19\x181\x1f\x1d'
+>>> test = bin(int.from_bytes(msg.encode(), 'big'))
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+AttributeError: 'bytes' object has no attribute 'encode'
+>>> test = bin(int.from_bytes(msg, 'big'))
+>>> test
+'0b110001010100000101001101010010010101010101010001010111010101100101100101011000010110110101101001011101010111000101111101011110010000010100000001000011010000100100010101000100010001110100011001001001010010000100101101110000011100110111001001110101011101000111011101110110011110010111100001111011011110100111110101111100011111110111111001100001011000000110001101100010011001010110010001100111011001100110100101101000011010110000000000000011000000100000010100000100000001110000011000001001000010000000000100010000011100010001001000010101000101000110111100010111000110110001100100011000001100010001111100011101'
+>>> n = int(test,2)
+>>> n
+204628262130347109324201293100699643804249756851302228385916282753284366304364564011157911859609322095889173170338739989697775958177068537700658829582992485695967358212945343786589981
+>>> binascii.unhexlify('%x' % n)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+NameError: name 'binascii' is not defined
+>>> import binascii
+>>> binascii.unhexlify('%x' % n)
+b'1PSRUTWVYX[Z]\\_^A@CBEDGFIHKpsrutwvyx{z}|\x7f~a`cbedgfihk\x00\x03\x02\x05\x04\x07\x06\t\x08\x01\x10q\x12\x15\x14o\x17\x1b\x19\x181\x1f\x1d'
+>>> msg2 = binascii.unhexlify('%x' % n)
+>>> msg == msg2
+True
+>>> 
