@@ -15,7 +15,7 @@ import numpy
 
 def encryptMessage(message, pad):
 	# *********************************************************************************************************************
-	# Encrypt the message and print it to console for verification
+	# Encrypt the message converting the values into int and XORing them
 	# *********************************************************************************************************************
 	encryptedMsg =[]
 	for m,p in zip(message,pad):
@@ -26,7 +26,7 @@ def encryptMessage(message, pad):
 
 def packMessage(encryptedMsg):
 	# *********************************************************************************************************************
-	# Encrypt the message and print it to console for verification
+	# Gotta pack the message, because python likes ints to be 4 bytes, while C and everyone else likes 1 byte per char
 	# *********************************************************************************************************************
 	messageLen = len(encryptedMsg)
 	packedEncryptedMsg = struct.pack("{0:d}B".format(messageLen), *encryptedMsg)
@@ -34,7 +34,7 @@ def packMessage(encryptedMsg):
 
 def writePackedMsg(packedEncryptedMsg):
 	# *********************************************************************************************************************
-	# Encrypt the message and print it to console for verification
+	# Write the packed message out to a file (will be later used to send over network)
 	# *********************************************************************************************************************
 	f = open('cipher.txt','wb')
 	# encryptedMessage = bytes(encryptedMessage)
@@ -44,7 +44,7 @@ def writePackedMsg(packedEncryptedMsg):
 
 def readPackedMsg():
 	# *********************************************************************************************************************
-	# Encrypt the message and print it to console for verification
+	# open file, read message 
 	# *********************************************************************************************************************
 	f = open('cipher.txt','rb')
 	encryptedMsgRead = f.read()
@@ -53,7 +53,7 @@ def readPackedMsg():
 
 def unpackMessage(packedEncryptedMsg):
 	# *********************************************************************************************************************
-	# Encrypt the message and print it to console for verification
+	# unpack to use with python again
 	# *********************************************************************************************************************
 	messageLen = len(packedEncryptedMsg)
 	unpackedencryptedMessage = struct.unpack("{0:d}B".format(messageLen), packedEncryptedMsg)
@@ -61,7 +61,7 @@ def unpackMessage(packedEncryptedMsg):
 
 def unpack_ParseMessage(encryptedMsgRead):
 	# *********************************************************************************************************************
-	# Encrypt the message and print it to console for verification
+	# gotta make it into a list to be able to play with it
 	# *********************************************************************************************************************
 	unpackedencryptedMessage = unpackMessage(encryptedMsgRead)
 	unpackedencryptedMessageList = list(unpackedencryptedMessage)
@@ -69,7 +69,7 @@ def unpack_ParseMessage(encryptedMsgRead):
 
 def decryptMessage(unpackedencryptedMessageList,pad):
 	# *********************************************************************************************************************
-	# Encrypt the message and print it to console for verification
+	# same as encrypt
 	# *********************************************************************************************************************
 	decryptedMessage = []
 	for e,p in zip(unpackedencryptedMessageList,pad):
@@ -79,23 +79,27 @@ def decryptMessage(unpackedencryptedMessageList,pad):
 
 def bitFlipper(encryptedMsgRead):
 	# *********************************************************************************************************************
-	# Encrypt the message and print it to console for verification
+	# Take random bits and flip them with a discrete probability. Used to measure error propagation in simulation
 	# *********************************************************************************************************************
+	# convert the packed, encrypted message into bits and make it a list
 	binaryMsg =  bin(int.from_bytes(encryptedMsgRead, 'big'))
 	binaryMsgList = list(binaryMsg)
 	# print('Binary MSG LIst: ', binaryMsgList)
 	print('Binary MSG before flip: ', binaryMsg)
 	
-	
+	# Based on a probability, we can establish the probability of each bit getting flipped
+
 	# 0 for no change, 1 flips the bit
 	elements = [0,1]
 	# 1/16 bits needs to be flipped. so probability of flipping is 0.0625
 	probabilities = [0.9375, 0.0625]
 
-	# need to skip the 0, and 1st bit since they  are there for python reasons
+	# need to keep count of bits flipped for later analysis
+	bitsFlipped = 0
 
+	# need to skip the 0, and 1st bit since they  are there for python reasons
 	for i in range(2, len(binaryMsgList)):
-		# get a random probability (labled coin for coin toss though probabilities can be changed)
+		# get a random probability (labeled coin for coin toss though probabilities can be changed)
 		coinList = (numpy.random.choice(elements,1,p=list(probabilities))).tolist()
 		coin = coinList[0]
 		# if the coin is 0 then go back to the top, and increase i
@@ -104,9 +108,11 @@ def bitFlipper(encryptedMsgRead):
 		# else the coin is not zero, so we have to change 0 -> 1, and 1 ->0 in position i of binaryMsgList 
 		if 	binaryMsgList[i] == '0':
 			binaryMsgList[i] = '1'
+			bitsFlipped += 1
 			continue
 		if  binaryMsgList[i] == '1':
 			binaryMsgList[i] = '0'
+			bitsFlipped += 1
 			
 	# after the bits have been flipped time to rejoin the list into a string
 	binaryMsg = ''.join(binaryMsgList)
@@ -128,7 +134,8 @@ def bitFlipper(encryptedMsgRead):
 		print('Different')
 	# **************************************************
 
-	return encryptedMsgReadFlipped
+	# return the encrypted packed message with some bits flipped and the counter. 
+	return encryptedMsgReadFlipped, bitsFlipped
 
 
 def main():
@@ -170,7 +177,7 @@ def main():
 	# read packed message from file
 	encryptedMsgRead = readPackedMsg()
 	print('Before errors introduced: ',encryptedMsgRead)
-	encryptedMsgReadFlipped = bitFlipper(encryptedMsgRead)
+	encryptedMsgReadFlipped, bitsFlipped = bitFlipper(encryptedMsgRead)
 
 	# unpack message read
 	encryptedMsgRcvd = unpack_ParseMessage(encryptedMsgRead)
@@ -199,6 +206,9 @@ def main():
 	print('*'*40)
 	print('decryptedMessageFlipped : ')
 	print(decryptedMsgFlipped)
+	print('*'*40)
+	print('bits flipped :')
+	print(bitsFlipped)
 
 
 if __name__ == '__main__':
