@@ -137,6 +137,101 @@ def bitFlipper(encryptedMsgRead):
 	# return the encrypted packed message with some bits flipped and the counter. 
 	return encryptedMsgReadFlipped, bitsFlipped
 
+def flipSubroutine(i,binaryMsgList):
+	if 	binaryMsgList[i] == '0':
+		binaryMsgList[i] = '1'
+	else:
+		binaryMsgList[i] = '0'
+	return binaryMsgList[i]
+
+def tripletBitFlipper(encryptedMsgRead):
+	# *********************************************************************************************************************
+	# Take random bits and flip them with a discrete probability. Used to measure error propagation in simulation
+	# *********************************************************************************************************************
+	# convert the packed, encrypted message into bits and make it a list
+	binaryMsg =  bin(int.from_bytes(encryptedMsgRead, 'big'))
+	binaryMsgList = list(binaryMsg)
+	# print('Binary MSG LIst: ', binaryMsgList)
+	print('Binary MSG before flip: ', binaryMsg)
+	
+	# Based on a probability, we can establish the probability of a bit getting flipped
+
+	# 0 for no change, 1 flips the bit
+	elements = [0,1]
+	# 1/16 bits needs to be flipped. so probability of flipping is 0.0625
+	probabilities = [0.9375, 0.0625]
+
+	# need to keep count of bits flipped for later analysis
+	bitsFlipped = 0
+
+	# initialize index of the list to 2 
+	# need to skip the 0, and 1st bit since they  are there for python reasons ('0' and 'b')
+	# thats why we start at 2
+	i = 2
+
+
+	while (i < len(binaryMsgList)):
+		# get a random probability (labeled coin for coin toss though probabilities can be changed)
+		coinList = (numpy.random.choice(elements,1,p=list(probabilities))).tolist()
+		coin = coinList[0]
+		# if the coin is 0 then go back to the top, and increase i
+		if coin == 0:
+			i+=1
+			continue
+		# else the coin is not zero, so we have to change 0 -> 1, and 1 ->0 in position i of binaryMsgList 
+		else:
+			# flip the first bit at position i
+			binaryMsgList[i] = flipSubroutine(i,binaryMsgList)
+			# increase thindex to i+1
+			i+=1
+			bitsFlipped+=1
+			# if i+1 < EOF then we flip it and increase i to i+2
+			if (i< len(binaryMsgList)):
+				binaryMsgList[i] = flipSubroutine(i,binaryMsgList)
+				i+=1
+				bitsFlipped+=1
+			# if i+1 suceeded in flipping, then we test if i+2 < EOF, if not then we are done and go back to while loop which will exit
+			# if i+1 failed then this will also fail and we will go back to the top of the while loop
+			if (i< len(binaryMsgList)):
+				binaryMsgList[i] = flipSubroutine(i,binaryMsgList)
+				i+=1
+				bitsFlipped+=1
+	
+
+
+		# if 	binaryMsgList[i] == '0':
+		# 	binaryMsgList[i] = '1'
+		# 	bitsFlipped += 1
+		# 	continue
+		# if  binaryMsgList[i] == '1':
+		# 	binaryMsgList[i] = '0'
+		# 	bitsFlipped += 1
+			
+	# after the bits have been flipped time to rejoin the list into a string
+	binaryMsg = ''.join(binaryMsgList)
+	print('binary MSG after flip: ', binaryMsg)
+
+	# convert to ints for python because python loves ints
+	binaryMsgInt = int(binaryMsg,2)
+
+	# we then convert back to the packed char bytes that we had originally
+	encryptedMsgReadFlipped = binascii.unhexlify('%x' % binaryMsgInt)
+
+	# quick test
+	# **************************************************
+	print('No flip: ',encryptedMsgRead)
+	print('Flip: ', encryptedMsgReadFlipped)
+	if encryptedMsgReadFlipped == encryptedMsgRead:
+		print('Same')
+	else:
+		print('Different')
+	# **************************************************
+
+	# return the encrypted packed message with some bits flipped and the counter. 
+	return encryptedMsgReadFlipped, bitsFlipped
+	
+
+
 
 def main():
 	# *********************************************************************************************************************
@@ -177,7 +272,7 @@ def main():
 	# read packed message from file
 	encryptedMsgRead = readPackedMsg()
 	print('Before errors introduced: ',encryptedMsgRead)
-	encryptedMsgReadFlipped, bitsFlipped = bitFlipper(encryptedMsgRead)
+	encryptedMsgReadFlipped, bitsFlipped = tripletBitFlipper(encryptedMsgRead)
 
 	# unpack message read
 	encryptedMsgRcvd = unpack_ParseMessage(encryptedMsgRead)
