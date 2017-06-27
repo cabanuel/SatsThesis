@@ -1,7 +1,7 @@
 # import socket
 
 UDP_IP = "0.0.0.0"
-UDP_PORT = 9001
+UDP_PORT = 0
 
 # sock = socket.socket(socket.AF_INET, # Internet
 #                      socket.SOCK_DGRAM) # UDP
@@ -29,7 +29,8 @@ s.bind((UDP_IP, UDP_PORT))
 
 # receive a package
 while True:
-	print s.recvfrom(65565)
+	x = (s.recvfrom(65565))
+	print('x=',x)
 
 # # disabled promiscuous mode
 # s.ioctl(socket.SIO_RCVALL, socket.RCVALL_OFF)

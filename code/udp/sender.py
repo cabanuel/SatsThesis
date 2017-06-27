@@ -29,12 +29,12 @@ def checksum(msg):
 try:
     s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW)
     s.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
-except socket.error , msg:
-    print 'Socket could not be created. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+except:
+    print( 'Socket could not be created. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
     sys.exit()
  
 # tell kernel not to put in headers, since we are providing it, when using IPPROTO_RAW this is not necessary
-# s.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
+s.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
      
 # now start constructing the packet
 packet = '';
@@ -105,14 +105,24 @@ ip_header = pack('!BBHHHBBH4s4s' , ip_ihl_ver, ip_tos, ip_tot_len, ip_id, ip_fra
 # packet = ip_header + tcp_header + user_data
 
 # s = socket(AF_INET, SOCK_RAW, IPPROTO_UDP)
-data = 'string'
-sport = 4711    # arbitrary source port
-dport = 9001   # arbitrary destination port
-length = 8+len(data);
+
+
+
+
+data1 = 'string'
+data2 = 12
+data = data1.encode('ascii') + str(data2).encode('ascii') 
+# sport = 4711    # arbitrary source port
+# dport = 9001   # arbitrary destination port
+dstport = 2
+srcport = 1
+portByte = (srcport<<4)+dstport
+# length = 8+len(data);
 checksum = 0
 packetID = 17
-udp_header = pack('!HHHHB', sport, dport, length, checksum, packetID)
-s.sendto(ip_header+udp_header+data, ('192.168.1.3', dport));
+# udp_header = pack('!HHHHB', sport, dport, length, checksum, packetID)
+udp_header = pack('!BHB', portByte, checksum, packetID)
+s.sendto(ip_header+udp_header+data, ('192.168.1.3', dstport));
 
 
 
@@ -127,7 +137,7 @@ s.sendto(ip_header+udp_header+data, ('192.168.1.3', dport));
 
 
 
-
+# i = int(s,16)
 
 # # s = socket(AF_INET, SOCK_RAW, IPPROTO_UDP)
 # data = 'string'
