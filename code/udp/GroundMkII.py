@@ -122,7 +122,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         udp_header = pack('!BHB', portByte, checksum, packetID)
         s.sendto(ip_header+udp_header+data, (IP_address_dst, dstport));
 
-    if packetType == 'SOHREQ': #request
+    if packetType == 'SRQ': #request
         data = payload.encode('ascii') # payload = 'SOHREQ'
         srcport = 1 
         dstport = 1
@@ -132,7 +132,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         udp_header = pack('!BHB', portByte, checksum, packetID)
         s.sendto(ip_header+udp_header+data, (IP_address_dst, dstport));
 
-    if packetType == 'SOHRSP': #response
+    if packetType == 'SRP': #response
         data = packetType.encode('ascii') + payload # payload = 'SOHRSP' + data of SOH
         srcport = 1 
         dstport = 1
