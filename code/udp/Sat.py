@@ -167,7 +167,7 @@ def main():
                 
                 payload = (paddedOTPOffset + objReqSize).encode('ascii') 
                 print('*SENDING ACK*')
-                sendPacket(IP_address_dst, IP_address_src, 255, 'ACK', payload, 0)
+                sendPacket(IP_address_dst, IP_address_src, 0, 'ACK', payload, reqPort)
 
                 # TIME TO SEND DATA
                 dataSent = 0
@@ -260,7 +260,7 @@ def main():
                 print(packetSentBuff)
                 payload = '0'
                 payload = payload.encode('ascii')
-                sendPacket(IP_address_dst, IP_address_src, 255, 'SYN', payload, reqPort)
+                sendPacket(IP_address_dst, IP_address_src, 255, 'FIN', payload, reqPort)
 
 
 
