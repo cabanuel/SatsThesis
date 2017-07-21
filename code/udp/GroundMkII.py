@@ -102,6 +102,17 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         udp_header = pack('!BHB', portByte, checksum, packetID)
         s.sendto(ip_header+udp_header+data, (IP_address_dst, dstport));
 
+
+    if packetType == 'CON':
+        data = packetType.encode('ascii') + payload #payload = MIS, Packet numbers where each byte is one packetID 
+        srcport = 0
+        dstport = 0
+        portByte = (srcport<<4)+dstport
+
+        checksum = 0 # TODO: write a function to calculate checksum of payload
+        udp_header = pack('!BHB', portByte, checksum, packetID)
+        s.sendto(ip_header+udp_header+data, (IP_address_dst, dstport));
+
     if packetType == 'DAT':
         data = payload # payload is the data being sent
         srcport = reqPort 
@@ -163,10 +174,34 @@ def main():
 
             print('SWITCHING TO RECEIVING MODE')
             # recieve the packet (77 bytes)
-            while True:
+            i = 0
+            while i < 5:
                 packetRcvd = s.recvfrom(77)
                 packetRcvd = packetRcvd[0]    
                 print(packetRcvd)
+                i +=1
+
+            repeatFirstPacket ='01000000'
+            firstpacket = int(repeatFirstPacket,2)
+            payload = pack('B',firstpacket)
+            i = 0
+            while i < 31:
+                payload = payload + pack('B',0)
+                i+=1
+            # payload = payload.encode('ascii')
+            sendPacket(IP_address_dst, IP_address_src, 255, 'MIS', payload, reqPort)
+
+            packetRcvd = s.recvfrom(77)
+            packetRcvd = packetRcvd[0]    
+            print(packetRcvd)
+
+            packetRcvd = s.recvfrom(77)
+            packetRcvd = packetRcvd[0]    
+            print(packetRcvd)
+
+            payload = '0'
+            payload = payload.encode('ascii')
+            sendPacket(IP_address_dst, IP_address_src, 255, 'FIN', payload, reqPort)
 
 
 
