@@ -221,6 +221,10 @@ def main():
                                 packetID = 0
                                 break
 
+                            if packetType == 'FIN':
+                                dataSent = objReqSize
+                                break
+
                             # every 8 bits inidcates 1 packet
                             # if bit n is 1 it means packet n was missing and needs
                             # to be retransmitted, if 0 no retransmission.
