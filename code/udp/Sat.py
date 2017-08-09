@@ -59,7 +59,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
 
     # THE IP HEADER, THE IP HEADER NEVER CHANGES
 
-
+    # Packet type used to request object
     if packetType == 'REQ':
         reqPortByte = (str(reqPort).encode('ascii'))
         reqPortByte = pack('B',reqPort)
@@ -72,6 +72,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         udp_header = pack('!BHB', portByte, checksum, packetID)
         s.sendto(ip_header+udp_header+data, (IP_address_dst, dstport));
 
+    # Packet type used to acknowlege request packet 
     if packetType == 'ACK':
         data = packetType.encode('ascii') + payload #payload = ACK, OTP_OFFSET (5 bytesMAX) , OBJ_SIZE (5 bytes) 
         srcport = 0
@@ -82,6 +83,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         udp_header = pack('!BHB', portByte, checksum, packetID)
         s.sendto(ip_header+udp_header+data, (IP_address_dst, dstport));
 
+    # Packet type used to signal end of transmission, whether from EOF or if the ground station terminates 
     if packetType == 'FIN':
         data = packetType.encode('ascii') + payload #empty payload
         srcport = 0
@@ -92,6 +94,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         udp_header = pack('!BHB', portByte, checksum, packetID)
         s.sendto(ip_header+udp_header+data, (IP_address_dst, dstport));
 
+    # Packet type used to synchronize and request any retransmissions of the 255 packet frame
     if packetType == 'SYN':
         data = packetType.encode('ascii') + payload #payload = SYN, NULL 
         srcport = 0
@@ -102,6 +105,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         udp_header = pack('!BHB', portByte, checksum, packetID)
         s.sendto(ip_header+udp_header+data, (IP_address_dst, dstport));
 
+    # Packet type used to indicate the missing packets and request retransmission
     if packetType == 'MIS':
         data = packetType.encode('ascii') + payload #payload = MIS, Packet numbers where each byte is one packetID 
         srcport = 0
@@ -112,6 +116,18 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         udp_header = pack('!BHB', portByte, checksum, packetID)
         s.sendto(ip_header+udp_header+data, (IP_address_dst, dstport));
 
+    # Packet type used to initiate transmission of next 255 packet frame and continue data transmission (end of retransmission)
+    if packetType == 'CON':
+        data = packetType.encode('ascii') + payload #payload = MIS, Packet numbers where each byte is one packetID 
+        srcport = 0
+        dstport = 0
+        portByte = (srcport<<4)+dstport
+
+        checksum = 0 # TODO: write a function to calculate checksum of payload
+        udp_header = pack('!BHB', portByte, checksum, packetID)
+        s.sendto(ip_header+udp_header+data, (IP_address_dst, dstport));
+
+    # Packet type used to indicate payload data packet
     if packetType == 'DAT':
         data = payload # payload is the data being sent
         srcport = 2 
