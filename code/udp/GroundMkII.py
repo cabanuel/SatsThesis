@@ -2,16 +2,17 @@
 import socket
 import os
 from  struct import *
+from math import *
 
 # set IP address of source machine for sending, and dummy port (just filler)
 
 CUDP_IP = "0.0.0.0"
 CUDP_PORT = 0
 
-IP_address_src = '192.168.1.2'
-IP_address_dst = '192.168.1.3'
+IP_address_src = '192.168.1.3'
+IP_address_dst = '192.168.1.2'
 # set the length of max read (e.g. cadet can only send 77 bytes at a time)
-readLen = 77
+payloadSize = 77
 
 # create a raw socket that will bind to the network interface, this will receive all raw packets at the OSI layer 3
 s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW)
@@ -157,7 +158,7 @@ def main():
     while True:
         print('*MAIN MENU*')
         print('1. SEND OBJ REQ AND CAPTURE DATA')
-        print('2. SEND REQ AND CAPTURE SOH')
+        # print('2. SEND REQ AND CAPTURE SOH')
 
         response = int(input('PLEASE ENTER NUMBER OF DESIRED ACTION: '))
 
@@ -174,6 +175,95 @@ def main():
 
             print('SWITCHING TO RECEIVING MODE')
             # recieve the packet (77 bytes)
+            dataSent = 0
+            paketID = 0
+            packetsRecvd = 0
+            targetPacketsRcvd = 0 
+            recvdMsgBuffer = {}
+
+            f = open(obj, 'rb')            
+
+
+            # start data collection
+            while True:
+                # dataSent = 0
+                # paketID = 0 
+                # f = open(obj, 'rb')
+                # PAYLOAD LENGTH HERE IS SET AT 77 FOR THE MODEL USED
+                # CAN BE CHANGED TO N BYTES.
+                packetRcvd = s.recvfrom(payloadSize)
+                packetRcvd = packetRcvd[0]
+                print(packetRcvd)
+                # packetsRecvd +=1
+                # dataSent += 77
+                portByte   = format(int(packetRcvd[20]),'02x')
+                checksum   = packetRcvd[21:23]
+                packetID   = packetRcvd[23]
+                print('***** PACKET ID TYPE:', type(packetID))
+                payload    = packetRcvd[24:]
+                srcport    = int(portByte[0],16)
+                dstport    = int(portByte[1],16)
+                packetType = payload[0:3].decode('ascii')
+                print('packet type', packetType)
+
+
+                if dstport == 0:
+                    if packetType == 'ACK':
+                        # parse ACK
+                        # ACK is added to the written file
+                        # 0-3 ACK, 3-10 OTP offset, 10-17 obj size
+                        ackPayload = payload[3:19]
+
+                        ackPayload = unpack('!QQ',ackPayload)
+                        OTP_OFFSET = ackPayload[0]
+                        OBJ_SIZE = ackPayload[1] # in bytes
+                        targetPacketsRcvd = ceil(OBJ_SIZE/payloadSize) + 1 #total data/packetsize + the ACK packet
+                        recvdMsgBuffer[packetID] = payload
+
+
+
+
+                    if packetType == 'SYN':
+                        # trigger check for missing/corrupted packets, then CON
+                        pass
+                    if packetType == 'FIN':
+                        pass
+                        # trigger check for missing corrupted packets, then FIN
+                    # TODO: add functionality for state of health packets sent to port 0
+                    # print('THIS IS USED FOR NON DATA TRANSFERR PACKETS')
+
+                # else it must all be data being sent to reqport
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             i = 0
             while i < 5:
                 packetRcvd = s.recvfrom(77)

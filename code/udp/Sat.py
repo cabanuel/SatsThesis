@@ -8,8 +8,8 @@ from  struct import *
 CUDP_IP = "0.0.0.0"
 CUDP_PORT = 0
 
-IP_address_src = '192.168.1.3'
-IP_address_dst = '192.168.1.2'
+IP_address_src = '192.168.1.2'
+IP_address_dst = '192.168.1.3'
 # set the length of max read (e.g. cadet can only send 77 bytes at a time)
 readLen = 77
 
@@ -74,7 +74,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
 
     # Packet type used to acknowlege request packet 
     if packetType == 'ACK':
-        data = packetType.encode('ascii') + payload #payload = ACK, OTP_OFFSET (5 bytesMAX) , OBJ_SIZE (5 bytes) 
+        data = packetType.encode('ascii') + payload #payload = ACK, OTP_OFFSET (8 bytes) , OBJ_SIZE (8 bytes) 
         srcport = 0
         dstport = 0
         portByte = (srcport<<4)+dstport
@@ -183,17 +183,21 @@ def main():
                 reqPort = payload[3]
                 objReq  = payload[4:].decode('ascii') #object requested
                 objReqSizeDec = os.stat(objReq).st_size
-                objReqSize = hex(os.stat(objReq).st_size) # length of object requested in hex (to save space)
-                objReqSize = objReqSize[2:] #take the length in hex
-                objReqSize = objReqSize.zfill(5) #pad to 5 spaces
 
-                paddedOTPOffset = hex(OTP_OFFSET)
-                paddedOTPOffset = paddedOTPOffset[2:]
-                paddedOTPOffset = paddedOTPOffset.zfill(5) # need to pad to 5 total bytes
+                # objReqSize = hex(os.stat(objReq).st_size) # length of object requested in hex (to save space)
+                # objReqSize = objReqSize[2:] #take the length in hex
+                # objReqSize = objReqSize.zfill(5) #pad to 5 spaces
+
+                # paddedOTPOffset = hex(OTP_OFFSET)
+                # paddedOTPOffset = paddedOTPOffset[2:]
+                # paddedOTPOffset = paddedOTPOffset.zfill(5) # need to pad to 5 total bytes
                 
-                payload = (paddedOTPOffset + objReqSize).encode('ascii') 
+                # payload = (paddedOTPOffset + objReqSize).encode('ascii')
+
+                # pack the objsize and the OTP offset as long unsigned ints
+                payload = pack('!QQ', OTP_OFFSET, objReqSizeDec) 
                 print('*SENDING ACK*')
-                sendPacket(IP_address_dst, IP_address_src, 0, 'ACK', payload, reqPort)
+                sendPacket(IP_address_dst, IP_address_src, 0, 'ACK', payload, 0)
 
                 # TIME TO SEND DATA
                 dataSent = 0
