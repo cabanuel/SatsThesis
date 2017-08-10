@@ -39,6 +39,8 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
     # PASSED AS A PARAMETER AS STRING
     dest_ip = IP_address_dst 
      
+    # THE IP HEADER, THE IP HEADER NEVER CHANGES 
+
     # ip header fields
     ip_ihl = 5
     ip_ver = 4
@@ -58,7 +60,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
     ip_header = pack('!BBHHHBBH4s4s' , ip_ihl_ver, ip_tos, ip_tot_len, ip_id, ip_frag_off, ip_ttl, ip_proto, ip_check, ip_saddr, ip_daddr)
         
 
-    # THE IP HEADER, THE IP HEADER NEVER CHANGES
+
 
 
     if packetType == 'REQ':
@@ -177,14 +179,21 @@ def main():
             # recieve the packet (77 bytes)
             dataSent = 0
             paketID = 0
-            packetsRecvd = 0
+            totalPacketsRcvd = 0
             targetPacketsRcvd = 0 
             recvdMsgBuffer = {}
-
-            f = open(obj, 'rb')            
+            repeatPackets = ''
+            #  TESTING RETRANSMISSION
+            x = 0
+            f = open('test.txt', 'wb')            
 
 
             # start data collection
+
+            # TODO: add functionality for state of health packets sent to port 0
+            # print('THIS IS USED FOR NON DATA TRANSFERR PACKETS')
+
+            # else it must all be data being sent to reqport
             while True:
                 # dataSent = 0
                 # paketID = 0 
@@ -218,21 +227,85 @@ def main():
                         OTP_OFFSET = ackPayload[0]
                         OBJ_SIZE = ackPayload[1] # in bytes
                         targetPacketsRcvd = ceil(OBJ_SIZE/payloadSize) + 1 #total data/packetsize + the ACK packet
+                        # print(targetPacketsRcvd)
                         recvdMsgBuffer[packetID] = payload
-
-
+                        totalPacketsRcvd += 1
 
 
                     if packetType == 'SYN':
                         # trigger check for missing/corrupted packets, then CON
-                        pass
+                        repeatPackets = ''
+                        for i in range(256):
+                            if i in recvdMsgBuffer:
+                                repeatPackets += '0'
+                                continue
+                            else:
+                                repeatPackets += '1'
+                        if '1' in repeatPackets:
+                            missingPack1 = int(repeatPackets[0:8],2)
+                            missingPack2 = int(repeatPackets[8:16],2)
+                            missingPack3 = int(repeatPackets[16:24],2)
+                            missingPack4 = int(repeatPackets[24:32],2)
+                            print(type(missingPack1))
+                            payload = pack('!BBBB', missingPack1, missingPack2, missingPack3, missingPack4)
+                            packetID = 255
+                            sendPacket(IP_address_dst, IP_address_src, packetID, 'MIS', payload, 0)
+                            continue
+                        else:
+                            # write the packets to file, send a CON packet, and get the next 255 packets
+                            for i in recvdMsgBuffer:
+                                f.write(recvdMsgBuffer[i])
+
+                            packetID = 255
+                            payload = '0' #NULL payload
+                            payload = payload.encode('ascii')
+                            sendPacket(IP_address_dst, IP_address_src, packetID, 'CON', payload, 0)
+                            continue
+
                     if packetType == 'FIN':
-                        pass
-                        # trigger check for missing corrupted packets, then FIN
-                    # TODO: add functionality for state of health packets sent to port 0
-                    # print('THIS IS USED FOR NON DATA TRANSFERR PACKETS')
+                        repeatPackets = ''
+                        if x == 0:
+                            del recvdMsgBuffer[1]
+                            totalPacketsRcvd -=1
+                            x+=1
+                        for i in range(totalPacketsRcvd-1):
+                            if i not in recvdMsgBuffer:
+                                repeatPackets += '1'
+                                continue
+                            else:
+                                repeatPackets += '0'
+                        while len(repeatPackets) <= 32:
+                            repeatPackets += '0'
 
-                # else it must all be data being sent to reqport
+                        print('rpt ',repeatPackets)
+                        if '1' in repeatPackets:
+                            missingPack1 = int(repeatPackets[0:8],2)
+                            missingPack2 = int(repeatPackets[8:16],2)
+                            missingPack3 = int(repeatPackets[16:24],2)
+                            missingPack4 = int(repeatPackets[24:32],2)
+                            payload = pack('!BBBB', missingPack1, missingPack2, missingPack3, missingPack4)
+                            packetID = 255
+                            sendPacket(IP_address_dst, IP_address_src, packetID, 'MIS', payload, 0)
+                            continue
+                        else:
+                            # write packets to file,  send a FIN packet and exit
+                            for i in recvdMsgBuffer:
+                                f.write(recvdMsgBuffer[i])
+                                print('WRITING', recvdMsgBuffer )
+                            packetID = 255
+                            payload = '0' #NULL payload
+                            payload = payload.encode('ascii')
+                            sendPacket(IP_address_dst, IP_address_src, packetID, 'FIN', payload, 0)
+                            break
+                    # if dstport != 0 then it is the reqport (for now) and it is data and we must append it to the dict
+                    
+                print('SAVING')
+                recvdMsgBuffer[packetID] = payload
+                totalPacketsRcvd +=1
+
+            # close file
+            f.close()
+            print('DONE')            
 
 
 
@@ -263,35 +336,34 @@ def main():
 
 
 
+            # i = 0
+            # while i < 5:
+            #     packetRcvd = s.recvfrom(77)
+            #     packetRcvd = packetRcvd[0]    
+            #     print(packetRcvd)
+            #     i +=1
 
-            i = 0
-            while i < 5:
-                packetRcvd = s.recvfrom(77)
-                packetRcvd = packetRcvd[0]    
-                print(packetRcvd)
-                i +=1
+            # repeatFirstPacket ='01000000'
+            # firstpacket = int(repeatFirstPacket,2)
+            # payload = pack('B',firstpacket)
+            # i = 0
+            # while i < 31:
+            #     payload = payload + pack('B',0)
+            #     i+=1
+            # # payload = payload.encode('ascii')
+            # sendPacket(IP_address_dst, IP_address_src, 255, 'MIS', payload, reqPort)
 
-            repeatFirstPacket ='01000000'
-            firstpacket = int(repeatFirstPacket,2)
-            payload = pack('B',firstpacket)
-            i = 0
-            while i < 31:
-                payload = payload + pack('B',0)
-                i+=1
+            # packetRcvd = s.recvfrom(77)
+            # packetRcvd = packetRcvd[0]    
+            # print(packetRcvd)
+
+            # packetRcvd = s.recvfrom(77)
+            # packetRcvd = packetRcvd[0]    
+            # print(packetRcvd)
+
+            # payload = '0'
             # payload = payload.encode('ascii')
-            sendPacket(IP_address_dst, IP_address_src, 255, 'MIS', payload, reqPort)
-
-            packetRcvd = s.recvfrom(77)
-            packetRcvd = packetRcvd[0]    
-            print(packetRcvd)
-
-            packetRcvd = s.recvfrom(77)
-            packetRcvd = packetRcvd[0]    
-            print(packetRcvd)
-
-            payload = '0'
-            payload = payload.encode('ascii')
-            sendPacket(IP_address_dst, IP_address_src, 255, 'FIN', payload, reqPort)
+            # sendPacket(IP_address_dst, IP_address_src, 255, 'FIN', payload, reqPort)
 
 
 

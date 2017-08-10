@@ -286,7 +286,7 @@ def main():
                     # print(packetSentBuff)
                     payload = '0'
                     payload = payload.encode('ascii')
-                    sendPacket(IP_address_dst, IP_address_src, 255, 'FIN', payload, reqPort)
+                    sendPacket(IP_address_dst, IP_address_src, 255, 'FIN', payload, 0)
 
                     print('*SENT FIN PACKET AWAITING FIN RESPONSE')
 
@@ -317,6 +317,11 @@ def main():
                     # 256 bits (n = 0 through 255, where n =0 is the ack packet on first
                     # session of 256 packets)
 
+
+                    # TODO: this means the packet has a MIS tag and port 0
+                    # useful for threading (future work)
+
+
                     # set up index for packets
                     i = 0
                     missingPacketsBin = ''
@@ -332,10 +337,11 @@ def main():
                     # we set packetID = 0, purge the dictionary, and send the next 255 packets 
                     # of data
 
-                    print('missingpacketsbin ', type(missingPacketsBin))
+                    print('missingpacketsbin ', (missingPacketsBin))
                     i = 0
                     while i < len(missingPacketsBin):
                         if missingPacketsBin[i] == '1':
+                            print('*RETRANSMITTING*', packetSentBuff[i])
                             payload = packetSentBuff[i]
                             packetID = i
                             sendPacket(IP_address_dst, IP_address_src, packetID, 'DAT', payload, reqPort)
