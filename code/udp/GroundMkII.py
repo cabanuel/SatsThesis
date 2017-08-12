@@ -242,12 +242,17 @@ def main():
                             else:
                                 repeatPackets += '1'
                         if '1' in repeatPackets:
-                            missingPack1 = int(repeatPackets[0:8],2)
-                            missingPack2 = int(repeatPackets[8:16],2)
-                            missingPack3 = int(repeatPackets[16:24],2)
-                            missingPack4 = int(repeatPackets[24:32],2)
-                            print(type(missingPack1))
-                            payload = pack('!BBBB', missingPack1, missingPack2, missingPack3, missingPack4)
+                            i = 0
+                            missingPack = []
+                            while i < 32:
+                                missingPack.append(int(repeatPackets[i*8:i*8+8],2))
+                                i+=1
+
+                            payload = pack('!B', missingPack[0])
+
+                            for i in range(1,32):
+                                payload += pack('!B', missingPack[i])
+
                             packetID = 255
                             sendPacket(IP_address_dst, IP_address_src, packetID, 'MIS', payload, 0)
                             continue
@@ -264,26 +269,35 @@ def main():
 
                     if packetType == 'FIN':
                         repeatPackets = ''
+
+# DELETE PACKET TEST START
                         if x == 0:
                             del recvdMsgBuffer[1]
                             totalPacketsRcvd -=1
                             x+=1
+# DELETE PACKET TEST END
                         for i in range(totalPacketsRcvd-1):
                             if i not in recvdMsgBuffer:
                                 repeatPackets += '1'
                                 continue
                             else:
                                 repeatPackets += '0'
-                        while len(repeatPackets) <= 32:
+                        while len(repeatPackets) < 256:
                             repeatPackets += '0'
 
                         print('rpt ',repeatPackets)
                         if '1' in repeatPackets:
-                            missingPack1 = int(repeatPackets[0:8],2)
-                            missingPack2 = int(repeatPackets[8:16],2)
-                            missingPack3 = int(repeatPackets[16:24],2)
-                            missingPack4 = int(repeatPackets[24:32],2)
-                            payload = pack('!BBBB', missingPack1, missingPack2, missingPack3, missingPack4)
+                            i = 0
+                            missingPack = []
+                            while i < 32:
+                                missingPack.append(int(repeatPackets[i*8:i*8+8],2))
+                                i+=1
+
+                            payload = pack('!B', missingPack[0])
+
+                            for i in range(1,32):
+                                payload += pack('!B', missingPack[i])
+
                             packetID = 255
                             sendPacket(IP_address_dst, IP_address_src, packetID, 'MIS', payload, 0)
                             continue
@@ -306,8 +320,6 @@ def main():
             # close file
             f.close()
             print('DONE')            
-
-
 
 
 

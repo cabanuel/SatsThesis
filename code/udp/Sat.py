@@ -3,7 +3,7 @@ import socket
 import os
 from  struct import *
 
-# set IP address of source machine for sending, and dummy port (just filler)
+# set IP address of source machine for sending, and dummy port (just filler to test on VMs on same network)
 
 CUDP_IP = "0.0.0.0"
 CUDP_PORT = 0
@@ -29,6 +29,12 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
 # IP_address_* MUST BE OF TYPE STR
 # packetID MUST BE OF TYPE INT
 # packetType MUST BE OF TYPE STR
+
+# This is the structure for sending ALL types of packets, taking in only certain parameters
+# This will also fix the IP header and take charge of sending the IP packet
+# For testing in VM network, 20 bytes are lost out of the 77 target len to the IP header
+# This can be avoided in the radio operation, since the packet transfer will be taken care of
+# by something like AX.25 protocol
 
     packet = '';
 
@@ -59,6 +65,19 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
 
     # THE IP HEADER, THE IP HEADER NEVER CHANGES
 
+# *****************************************************************************************************************
+# This is where we determine out NERDP header and append the payload and send the packets
+# portbyte is a byte containing the source port onthe first 4 bits of the byte, and the destination port in the last 4
+# This allows for 16 (0-15) ports for source and destinations
+# Each packet has the ip_header structure + the NERDP_header structure + and the payload
+# the header is 4 bytes, each other message extends that header by 3 bytes, but data transmission strictly 4 bytes per
+# header. These packets get rerouted because they don't go to port 0
+# 
+# Currently the only reserved port is port 0, that is for ACK, SYN, REQ, MIS
+# Future implementations may reserve port 1 for State of health and telemetry data
+
+# *****************************************************************************************************************
+
     # Packet type used to request object
     if packetType == 'REQ':
         reqPortByte = (str(reqPort).encode('ascii'))
@@ -69,8 +88,8 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
-        udp_header = pack('!BHB', portByte, checksum, packetID)
-        s.sendto(ip_header+udp_header+data, (IP_address_dst, dstport));
+        NERDP_header = pack('!BHB', portByte, checksum, packetID)
+        s.sendto(ip_header+NERDP_header+data, (IP_address_dst, dstport));
 
     # Packet type used to acknowlege request packet 
     if packetType == 'ACK':
@@ -80,8 +99,8 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
-        udp_header = pack('!BHB', portByte, checksum, packetID)
-        s.sendto(ip_header+udp_header+data, (IP_address_dst, dstport));
+        NERDP_header = pack('!BHB', portByte, checksum, packetID)
+        s.sendto(ip_header+NERDP_header+data, (IP_address_dst, dstport));
 
     # Packet type used to signal end of transmission, whether from EOF or if the ground station terminates 
     if packetType == 'FIN':
@@ -91,8 +110,8 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
-        udp_header = pack('!BHB', portByte, checksum, packetID)
-        s.sendto(ip_header+udp_header+data, (IP_address_dst, dstport));
+        NERDP_header = pack('!BHB', portByte, checksum, packetID)
+        s.sendto(ip_header+NERDP_header+data, (IP_address_dst, dstport));
 
     # Packet type used to synchronize and request any retransmissions of the 255 packet frame
     if packetType == 'SYN':
@@ -102,8 +121,8 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
-        udp_header = pack('!BHB', portByte, checksum, packetID)
-        s.sendto(ip_header+udp_header+data, (IP_address_dst, dstport));
+        NERDP_header = pack('!BHB', portByte, checksum, packetID)
+        s.sendto(ip_header+NERDP_header+data, (IP_address_dst, dstport));
 
     # Packet type used to indicate the missing packets and request retransmission
     if packetType == 'MIS':
@@ -113,8 +132,8 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
-        udp_header = pack('!BHB', portByte, checksum, packetID)
-        s.sendto(ip_header+udp_header+data, (IP_address_dst, dstport));
+        NERDP_header = pack('!BHB', portByte, checksum, packetID)
+        s.sendto(ip_header+NERDP_header+data, (IP_address_dst, dstport));
 
     # Packet type used to initiate transmission of next 255 packet frame and continue data transmission (end of retransmission)
     if packetType == 'CON':
@@ -124,8 +143,8 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
-        udp_header = pack('!BHB', portByte, checksum, packetID)
-        s.sendto(ip_header+udp_header+data, (IP_address_dst, dstport));
+        NERDP_header = pack('!BHB', portByte, checksum, packetID)
+        s.sendto(ip_header+NERDP_header+data, (IP_address_dst, dstport));
 
     # Packet type used to indicate payload data packet
     if packetType == 'DAT':
@@ -135,8 +154,8 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
-        udp_header = pack('!BHB', portByte, checksum, packetID)
-        s.sendto(ip_header+udp_header+data, (IP_address_dst, dstport));
+        NERDP_header = pack('!BHB', portByte, checksum, packetID)
+        s.sendto(ip_header+NERDP_header+data, (IP_address_dst, dstport));
 
     if packetType == 'SRQ': #request
         data = payload.encode('ascii') # payload = 'SOHREQ'
@@ -145,8 +164,8 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
-        udp_header = pack('!BHB', portByte, checksum, packetID)
-        s.sendto(ip_header+udp_header+data, (IP_address_dst, dstport));
+        NERDP_header = pack('!BHB', portByte, checksum, packetID)
+        s.sendto(ip_header+NERDP_header+data, (IP_address_dst, dstport));
 
     if packetType == 'SRP': #response
         data = packetType.encode('ascii') + payload # payload = 'SOHRSP' + data of SOH
@@ -155,8 +174,8 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
-        udp_header = pack('!BHB', portByte, checksum, packetID)
-        s.sendto(ip_header+udp_header+data, (IP_address_dst, dstport));
+        NERDP_header = pack('!BHB', portByte, checksum, packetID)
+        s.sendto(ip_header+NERDP_header+data, (IP_address_dst, dstport));
 
 def main():
     while True:
@@ -209,8 +228,9 @@ def main():
                 packetID +=1 
                 print('*SENDING DATA*')
                 while dataSent < objReqSizeDec:
-                    if packetID < 255:
-                        payload = f.read(53)
+                    payload = f.read(53)
+                    if packetID < 256 and len(payload) != 0:
+                        # payload = f.read(53)
                         packetSentBuff[packetID] = payload
                         sendPacket(IP_address_dst, IP_address_src, packetID, 'DAT', payload, reqPort)
                         dataSent += 53
@@ -325,6 +345,7 @@ def main():
                     # set up index for packets
                     i = 0
                     missingPacketsBin = ''
+                    print(len(missingPackets))
                     while i < len(missingPackets):
                         # take byte number i, convert it to binary of type str in format
                         # format takes the integer converts it to binary, 
@@ -337,7 +358,7 @@ def main():
                     # we set packetID = 0, purge the dictionary, and send the next 255 packets 
                     # of data
 
-                    print('missingpacketsbin ', (missingPacketsBin))
+                    print('missingpacketsbin ', len(missingPacketsBin))
                     i = 0
                     while i < len(missingPacketsBin):
                         if missingPacketsBin[i] == '1':
