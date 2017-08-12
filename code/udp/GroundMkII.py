@@ -226,7 +226,9 @@ def main():
                         ackPayload = unpack('!QQ',ackPayload)
                         OTP_OFFSET = ackPayload[0]
                         OBJ_SIZE = ackPayload[1] # in bytes
-                        targetPacketsRcvd = ceil(OBJ_SIZE/payloadSize) + 1 #total data/packetsize + the ACK packet
+                        targetPacketsRcvd = ceil(OBJ_SIZE/53) + 1 #total data/packetsize + the ACK packet
+                        lastPacketLen = OBJ_SIZE%53
+                        packetsInLastFrame = targetPacketsRcvd%256
                         # print(targetPacketsRcvd)
                         recvdMsgBuffer[packetID] = payload
                         totalPacketsRcvd += 1
@@ -260,10 +262,12 @@ def main():
                             # write the packets to file, send a CON packet, and get the next 255 packets
                             for i in recvdMsgBuffer:
                                 f.write(recvdMsgBuffer[i])
+                            recvdMsgBuffer= {}
 
                             packetID = 255
                             payload = '0' #NULL payload
                             payload = payload.encode('ascii')
+                            print('**************************Sending CON')
                             sendPacket(IP_address_dst, IP_address_src, packetID, 'CON', payload, 0)
                             continue
 
@@ -272,16 +276,18 @@ def main():
 
 # DELETE PACKET TEST START
                         if x == 0:
-                            del recvdMsgBuffer[1]
+                            print('***************REPEAT TEST')
+                            del recvdMsgBuffer[0]
                             totalPacketsRcvd -=1
                             x+=1
 # DELETE PACKET TEST END
-                        for i in range(totalPacketsRcvd-1):
-                            if i not in recvdMsgBuffer:
-                                repeatPackets += '1'
+                        print('$$$$$$$$$$$$$$$Packets in last frame', packetsInLastFrame)
+                        for i in range(packetsInLastFrame):
+                            if i in recvdMsgBuffer:
+                                repeatPackets += '0'
                                 continue
                             else:
-                                repeatPackets += '0'
+                                repeatPackets += '1'
                         while len(repeatPackets) < 256:
                             repeatPackets += '0'
 
@@ -299,13 +305,14 @@ def main():
                                 payload += pack('!B', missingPack[i])
 
                             packetID = 255
+                            print('***********SENT MIS')
                             sendPacket(IP_address_dst, IP_address_src, packetID, 'MIS', payload, 0)
                             continue
                         else:
                             # write packets to file,  send a FIN packet and exit
                             for i in recvdMsgBuffer:
                                 f.write(recvdMsgBuffer[i])
-                                print('WRITING', recvdMsgBuffer )
+                                # print('WRITING', recvdMsgBuffer )
                             packetID = 255
                             payload = '0' #NULL payload
                             payload = payload.encode('ascii')

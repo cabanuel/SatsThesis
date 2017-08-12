@@ -229,7 +229,7 @@ def main():
                 print('*SENDING DATA*')
                 while dataSent < objReqSizeDec:
                     payload = f.read(53)
-                    if packetID < 256 and len(payload) != 0:
+                    if packetID < 256: #and len(payload) != 0:
                         # payload = f.read(53)
                         packetSentBuff[packetID] = payload
                         sendPacket(IP_address_dst, IP_address_src, packetID, 'DAT', payload, reqPort)
@@ -241,7 +241,8 @@ def main():
                             # print(packetSentBuff)
                             payload = '0'
                             payload = payload.encode('ascii')
-                            sendPacket(IP_address_dst, IP_address_src, 255, 'SYN', payload, reqPort)
+                            print('**************SENDING SYN')
+                            sendPacket(IP_address_dst, IP_address_src, 255, 'SYN', payload, 0)
                             # listen for MIS packet
                             packetRcvd = s.recvfrom(77)
                             packetRcvd = packetRcvd[0]
@@ -250,6 +251,7 @@ def main():
                             packetID   = packetRcvd[23]
                             payload    = packetRcvd[24:]
 
+
                             # the MIS/CONT segment of the payload
                             packetType = payload[0:3].decode('ascii')
                             missingPackets = payload[3:]
@@ -257,6 +259,7 @@ def main():
                             # first we check that we didnt get a CONtinue message. if CON we are done retransmitting
 
                             if packetType == 'CON':
+                                print('***************CON RECVD')
                                 # reset the packet ID
                                 packetID = 0
                                 break
@@ -301,85 +304,88 @@ def main():
 
 
 
-                while True:
-                   # send FIN
-                    # print(packetSentBuff)
-                    payload = '0'
-                    payload = payload.encode('ascii')
-                    sendPacket(IP_address_dst, IP_address_src, 255, 'FIN', payload, 0)
+            while True:
+               # send FIN
+                # print(packetSentBuff)
+                payload = '0'
+                payload = payload.encode('ascii')
+                sendPacket(IP_address_dst, IP_address_src, 255, 'FIN', payload, 0)
 
-                    print('*SENT FIN PACKET AWAITING FIN RESPONSE')
+                print('*SENT FIN PACKET AWAITING FIN RESPONSE')
 
-                    # listen for MIS packet
-                    packetRcvd = s.recvfrom(77)
-                    packetRcvd = packetRcvd[0]
-                    portByte   = format(packetRcvd[20],'02x')
-                    checksum   = packetRcvd[21:23]
-                    packetID   = packetRcvd[23]
-                    payload    = packetRcvd[24:]
+                # listen for MIS packet
+                packetRcvd = s.recvfrom(77)
+                packetRcvd = packetRcvd[0]
+                portByte   = format(packetRcvd[20],'02x')
+                checksum   = packetRcvd[21:23]
+                packetID   = packetRcvd[23]
+                payload    = packetRcvd[24:]
 
-                    # the MIS/CONT segment of the payload
-                    packetType = payload[0:3].decode('ascii')
-                    missingPackets = payload[3:]
+                # the MIS/CONT segment of the payload
+                packetType = payload[0:3].decode('ascii')
+                missingPackets = payload[3:]
 
-                    # first we check that we didnt get a CONtinue message. if CON we are done retransmitting
+                # first we check that we didnt get a CONtinue message. if CON we are done retransmitting
 
-                    if packetType == 'FIN':
-                        # reset the packet ID
-                        packetID = 0
-                        break
+                if packetType == 'FIN':
+                    print('FIN RECEIVED')
+                    # reset the packet ID
+                    packetID = 0
+                    break
 
-                    # every 8 bits inidcates 1 packet
-                    # if bit n is 1 it means packet n was missing and needs
-                    # to be retransmitted, if 0 no retransmission.
-                    # need to build a list of 1 and 0s of packets that need to be
-                    # retransmitted. Index n will be the packet number
-                    # 256 bits (n = 0 through 255, where n =0 is the ack packet on first
-                    # session of 256 packets)
-
-
-                    # TODO: this means the packet has a MIS tag and port 0
-                    # useful for threading (future work)
+                # every 8 bits inidcates 1 packet
+                # if bit n is 1 it means packet n was missing and needs
+                # to be retransmitted, if 0 no retransmission.
+                # need to build a list of 1 and 0s of packets that need to be
+                # retransmitted. Index n will be the packet number
+                # 256 bits (n = 0 through 255, where n =0 is the ack packet on first
+                # session of 256 packets)
 
 
-                    # set up index for packets
-                    i = 0
-                    missingPacketsBin = ''
-                    print(len(missingPackets))
-                    while i < len(missingPackets):
-                        # take byte number i, convert it to binary of type str in format
-                        # format takes the integer converts it to binary, 
-                        missingPacketsBin = missingPacketsBin + format(int(missingPackets[i]), '08b')
-                        # now we increase the counter
-                        i += 1
-                    # after getting the 32 bytes, and convering them to binary, we iterate over
-                    # the string treating the index as the index for packet. if i == 1, then 
-                    # we go back to the dictionary and retransmit. if packets retransmitted ==0
-                    # we set packetID = 0, purge the dictionary, and send the next 255 packets 
-                    # of data
-
-                    print('missingpacketsbin ', len(missingPacketsBin))
-                    i = 0
-                    while i < len(missingPacketsBin):
-                        if missingPacketsBin[i] == '1':
-                            print('*RETRANSMITTING*', packetSentBuff[i])
-                            payload = packetSentBuff[i]
-                            packetID = i
-                            sendPacket(IP_address_dst, IP_address_src, packetID, 'DAT', payload, reqPort)
-                        i+=1
-                    # after this go back to the SYN
-                    # we either get a MIS request or a CON request
+                # TODO: this means the packet has a MIS tag and port 0
+                # useful for threading (future work)
 
 
+                # set up index for packets
+                i = 0
+                missingPacketsBin = ''
+                print(len(missingPackets))
+                while i < len(missingPackets):
+                    # take byte number i, convert it to binary of type str in format
+                    # format takes the integer converts it to binary, 
+                    missingPacketsBin = missingPacketsBin + format(int(missingPackets[i]), '08b')
+                    # now we increase the counter
+                    i += 1
+                # after getting the 32 bytes, and convering them to binary, we iterate over
+                # the string treating the index as the index for packet. if i == 1, then 
+                # we go back to the dictionary and retransmit. if packets retransmitted ==0
+                # we set packetID = 0, purge the dictionary, and send the next 255 packets 
+                # of data
+
+                print('missingpacketsbin ', len(missingPacketsBin))
+                i = 0
+                while i < len(missingPacketsBin):
+                    if missingPacketsBin[i] == '1':
+                        print(packetSentBuff)
+                        print('i =======',i)
+                        print('*RETRANSMITTING*', packetSentBuff[i])
+                        payload = packetSentBuff[i]
+                        packetID = i
+                        sendPacket(IP_address_dst, IP_address_src, packetID, 'DAT', payload, reqPort)
+                    i+=1
+                # after this go back to the SYN
+                # we either get a MIS request or a CON request
 
 
-                        # payload = f.read(53)
-                        # packetSentBuff[packetID] = payload
-                        # sendPacket(IP_address_dst, IP_address_src, packetID, 'DAT', payload, reqPort)
-                        # dataSent += 53
-                        # packetID += 1
-                    # send SYN
-                print(packetSentBuff)
+
+
+                    # payload = f.read(53)
+                    # packetSentBuff[packetID] = payload
+                    # sendPacket(IP_address_dst, IP_address_src, packetID, 'DAT', payload, reqPort)
+                    # dataSent += 53
+                    # packetID += 1
+                # send SYN
+            print(packetSentBuff)
                 # payload = '0'
                 # payload = payload.encode('ascii')
                 # print('*SENDING FIN*')
