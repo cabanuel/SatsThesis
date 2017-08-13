@@ -218,9 +218,11 @@ def main():
 
                 if dstport == 0:
                     if packetType == 'ACK':
+
                         # parse ACK
                         # ACK is added to the written file
                         # 0-3 ACK, 3-10 OTP offset, 10-17 obj size
+
                         ackPayload = payload[3:19]
 
                         ackPayload = unpack('!QQ',ackPayload)
@@ -231,11 +233,24 @@ def main():
                         packetsInLastFrame = targetPacketsRcvd%256
                         # print(targetPacketsRcvd)
                         recvdMsgBuffer[packetID] = payload
+                        print('PAYLOAD OF ACK:::::::::::', payload)
+                        ackFlag = 1
+
                         totalPacketsRcvd += 1
 
 
                     if packetType == 'SYN':
                         # trigger check for missing/corrupted packets, then CON
+# DELETE PACKET TEST START
+                        if x == 0:
+                            print('***************REPEAT TEST', recvdMsgBuffer[0])
+                            del recvdMsgBuffer[0]
+                            totalPacketsRcvd -=1
+                            x+=1
+                            ackFlag = 0
+# DELETE PACKET TEST END
+
+
                         repeatPackets = ''
                         for i in range(256):
                             if i in recvdMsgBuffer:
@@ -256,6 +271,7 @@ def main():
                                 payload += pack('!B', missingPack[i])
 
                             packetID = 255
+                            print('SENDING MIS in SYN', repeatPackets)
                             sendPacket(IP_address_dst, IP_address_src, packetID, 'MIS', payload, 0)
                             continue
                         else:
@@ -271,16 +287,49 @@ def main():
                             sendPacket(IP_address_dst, IP_address_src, packetID, 'CON', payload, 0)
                             continue
 
+
+
+
+
+
                     if packetType == 'FIN':
                         repeatPackets = ''
 
 # DELETE PACKET TEST START
                         if x == 0:
-                            print('***************REPEAT TEST')
+                            print('***************REPEAT TEST', recvdMsgBuffer[0])
                             del recvdMsgBuffer[0]
                             totalPacketsRcvd -=1
                             x+=1
+                            ackFlag = 0
 # DELETE PACKET TEST END
+
+                        if (('0' not in recvdMsgBuffer) and (totalPacketsRcvd < 256) and (ackFlag == 0)):
+                            # repeating ACK
+                            print('REREQUESTING ACK !*!*!*!**!*!*!*!*!*!***!*!*!*!*!*!*!*!**!*!*!*!*!*!*!*!*')
+                            repeatPackets +='1'
+                            repeatPackets += '0'*255
+
+                            i = 0
+                            missingPack = []
+                            while i < 32:
+                                missingPack.append(int(repeatPackets[i*8:i*8+8],2))
+                                i+=1
+
+                            payload = pack('!B', missingPack[0])
+
+                            for i in range(1,32):
+                                payload += pack('!B', missingPack[i])
+
+                            packetID = 255
+                            print('***********SENT MIS', repeatPackets)
+                            sendPacket(IP_address_dst, IP_address_src, packetID, 'MIS', payload, 0)
+                            continue
+
+
+
+
+
                         print('$$$$$$$$$$$$$$$Packets in last frame', packetsInLastFrame)
                         for i in range(packetsInLastFrame):
                             if i in recvdMsgBuffer:
@@ -292,6 +341,9 @@ def main():
                             repeatPackets += '0'
 
                         print('rpt ',repeatPackets)
+
+                            
+
                         if '1' in repeatPackets:
                             i = 0
                             missingPack = []
@@ -326,7 +378,9 @@ def main():
 
             # close file
             f.close()
-            print('DONE')            
+            print('DONE')
+
+            ackFlag = 0            
 
 
 
