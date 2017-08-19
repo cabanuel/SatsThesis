@@ -1,6 +1,7 @@
 #developed in python 3.5
 import socket
 import os
+import sys
 from  struct import *
 from math import *
 
@@ -213,7 +214,10 @@ def main():
                 response = int(input('PLEASE ENTER NUMBER OF DESIRED ACTION: '))
                 break
             except:
-                print('ERROR, TRY AGAIN')
+                print('Exiting')
+                sys.exit()
+
+
 
         # Requesting an object from the Satellite
         if response == 1:
@@ -266,10 +270,11 @@ def main():
                 checksum   = packetRcvd[21:23]
                 # packetID # (between 0-255)
                 packetID   = packetRcvd[23]
-                # get payload type
-                packetType = payload[0:3].decode('ascii')
                 # the rest is payload
                 payload    = packetRcvd[24:]
+                # get payload type
+                packetType = payload[0:3].decode('ascii')
+
 
                 if dstport == 0:
                     if packetType == 'ACK':
@@ -477,4 +482,6 @@ def main():
 # *******************************
 if __name__ == '__main__':
     main()
+
+
 
