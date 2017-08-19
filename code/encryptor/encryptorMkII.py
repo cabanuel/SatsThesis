@@ -239,9 +239,9 @@ def main():
 	# Make them lists of one byte of 'str'
 	# *********************************************************************************************************************
 
-	# Set up the data string we want to encrypt
-	# Set up the raw pad
+	# Set up the data string we want to encrypt (almost all ascii characters in this case)
 	string = '\x00abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()\x00.,'
+	# This is a test OTP for development, the padlong string must be random values for a true OTP
 	padlong = 111111111111111111111111111111111111111111111111111111111111111111111111111111
 
 	# TODO: Instead of hardcoding these, work on reading them from a file.

@@ -88,6 +88,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         # REQ packets get sent from port 0 to port0
         srcport = 0
         dstport = 0
+        # Store the source port on the upper 4 bits of the portbyte, and the destination port on the lower 4 bits
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
@@ -101,6 +102,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         # ACK packets get sent from port 0 to port 0
         srcport = 0
         dstport = 0
+        # Store the source port on the upper 4 bits of the portbyte, and the destination port on the lower 4 bits
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
@@ -113,6 +115,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         # FIN packets get sent from port 0 to port 0
         srcport = 0
         dstport = 0
+        # Store the source port on the upper 4 bits of the portbyte, and the destination port on the lower 4 bits
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
@@ -126,6 +129,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         # SYN packets get sent from port 0 to port 0
         srcport = 0
         dstport = 0
+        # Store the source port on the upper 4 bits of the portbyte, and the destination port on the lower 4 bits
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
@@ -138,6 +142,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         # MIS packets get sent from port 0 to port 0
         srcport = 0
         dstport = 0
+        # Store the source port on the upper 4 bits of the portbyte, and the destination port on the lower 4 bits
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
@@ -151,6 +156,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         # CON packets get sent from port 0 to port 0 
         srcport = 0
         dstport = 0
+        # Store the source port on the upper 4 bits of the portbyte, and the destination port on the lower 4 bits
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
@@ -164,6 +170,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         # packets get sent from port 2 to requested port
         srcport = 2 
         dstport = reqPort
+        # Store the source port on the upper 4 bits of the portbyte, and the destination port on the lower 4 bits
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
@@ -176,6 +183,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         # SOH packets get sent from port 1 to port 1
         srcport = 1 
         dstport = 1
+        # Store the source port on the upper 4 bits of the portbyte, and the destination port on the lower 4 bits
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
@@ -188,6 +196,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         # SOH packets get sent from port 1 to port 1
         srcport = 1 
         dstport = 1
+        # Store the source port on the upper 4 bits of the portbyte, and the destination port on the lower 4 bits
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
