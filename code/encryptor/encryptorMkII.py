@@ -169,7 +169,6 @@ def tripletBitFlipper(encryptedMsgRead):
 	# thats why we start at 2
 	i = 2
 
-
 	while (i < len(binaryMsgList)):
 		# get a random probability (labeled coin for coin toss though probabilities can be changed)
 		coinList = (numpy.random.choice(elements,1,p=list(probabilities))).tolist()
@@ -196,17 +195,7 @@ def tripletBitFlipper(encryptedMsgRead):
 				binaryMsgList[i] = flipSubroutine(i,binaryMsgList)
 				i+=1
 				bitsFlipped+=1
-	
 
-
-		# if 	binaryMsgList[i] == '0':
-		# 	binaryMsgList[i] = '1'
-		# 	bitsFlipped += 1
-		# 	continue
-		# if  binaryMsgList[i] == '1':
-		# 	binaryMsgList[i] = '0'
-		# 	bitsFlipped += 1
-			
 	# after the bits have been flipped time to rejoin the list into a string
 	binaryMsg = ''.join(binaryMsgList)
 	print('binary MSG after flip: ', binaryMsg)
@@ -239,9 +228,9 @@ def main():
 	# Make them lists of one byte of 'str'
 	# *********************************************************************************************************************
 
-	# Set up the data string we want to encrypt
-	# Set up the raw pad
+	# Set up the data string we want to encrypt (almost all ascii characters in this case)
 	string = '\x00abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()\x00.,'
+	# This is a test OTP for development, the padlong string must be random values for a true OTP
 	padlong = 111111111111111111111111111111111111111111111111111111111111111111111111111111
 
 	# TODO: Instead of hardcoding these, work on reading them from a file.
