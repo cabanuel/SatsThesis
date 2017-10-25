@@ -1,17 +1,17 @@
 #developed in python 3.5
 import socket
+import select
 import os
 import sys
 from  struct import *
 from math import *
-
 # set IP address of source machine for sending, and dummy port (just filler)
 
 CUDP_IP = "0.0.0.0"
 CUDP_PORT = 0
 
-IP_address_src = '192.168.1.3'
-IP_address_dst = '192.168.1.2'
+IP_address_src = '192.168.1.2'
+IP_address_dst = '192.168.1.1'
 # set the length of max read (e.g. cadet can only send 77 bytes at a time)
 readLen = 77
 # set the length of the actual data packet (readLen - IPv4 header - NERDP header)
@@ -201,7 +201,6 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         s.sendto(ip_header+NERDP_header+data, (IP_address_dst, dstport));
 
 def main():
-    while True:
         while True:
             print('*MAIN MENU*')
             print('1. SEND OBJ REQ AND CAPTURE DATA')
@@ -216,8 +215,6 @@ def main():
             except:
                 print('Exiting')
                 sys.exit()
-
-
 
         # Requesting an object from the Satellite
         if response == 1:
@@ -275,7 +272,6 @@ def main():
                 # get payload type
                 packetType = payload[0:3].decode('ascii')
 
-
                 if dstport == 0:
                     if packetType == 'ACK':
 
@@ -309,15 +305,16 @@ def main():
                     # if we receive a SYNchronization packet, means we have received 256 packets of data
                     # and the satellite has NOT sent all of the object yet
                     if packetType == 'SYN':
+
                         # trigger check for missing/corrupted packets, then CON
-# DELETE PACKET TEST START REMOVE BEFORE FLIGHT
-                        if x == 0:
-                            print('***************REPEAT TEST', recvdMsgBuffer[0])
-                            del recvdMsgBuffer[0]
-                            totalPacketsRcvd -=1
-                            x+=1
-                            ackFlag = 0
-# DELETE PACKET TEST END
+# # DELETE PACKET TEST START REMOVE BEFORE FLIGHT
+#                         if x == 0:
+#                             print('***************REPEAT TEST', recvdMsgBuffer[0])
+#                             del recvdMsgBuffer[0]
+#                             totalPacketsRcvd -=1
+#                             x+=1
+#                             ackFlag = 0
+# # DELETE PACKET TEST END
 
                         # if we received SYN we need to check if we are missing any packets
                         # ground must have received packets 0-255
@@ -377,14 +374,14 @@ def main():
                     if packetType == 'FIN':
                         repeatPackets = ''
 
-# DELETE PACKET TEST START, REMOVE BEFORE FLIGHT
-                        if x == 0:
-                            print('***************REPEAT TEST', recvdMsgBuffer[0])
-                            del recvdMsgBuffer[0]
-                            totalPacketsRcvd -=1
-                            x+=1
-                            ackFlag = 0
-# DELETE PACKET TEST END
+# # DELETE PACKET TEST START, REMOVE BEFORE FLIGHT
+#                         if x == 0:
+#                             print('***************REPEAT TEST', recvdMsgBuffer[0])
+#                             del recvdMsgBuffer[0]
+#                             totalPacketsRcvd -=1
+#                             x+=1
+#                             ackFlag = 0
+# # DELETE PACKET TEST END
                         # if we are missing the ACK packet, and the flag has not been triggered indicating
                         # we are still on the first frame, we must request it alone
                         # we cannot do retranmission on frames less than 256 packets without the OBJ_SIZE
@@ -461,13 +458,14 @@ def main():
 
 
                 # if dstport != 0 then it is the reqport (for now) and it is data and we must append it to the dict    
-                print('SAVING')
                 recvdMsgBuffer[packetID] = payload
                 totalPacketsRcvd +=1
 
             # close file
             f.close()
             print('DONE')
+            print('SAVING {}'.format(obj))
+            print('TOTAL PACKETS #', totalPacketsRcvd)
             # reset ack flag
             ackFlag = 0            
 
@@ -482,6 +480,3 @@ def main():
 # *******************************
 if __name__ == '__main__':
     main()
-
-
-

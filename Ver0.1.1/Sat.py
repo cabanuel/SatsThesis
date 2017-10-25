@@ -1,35 +1,20 @@
 #developed in python 3.5
 import socket
 import os
-import select
 from  struct import *
-
-#  ********************************************************************************************************************
-# Establish some parameters from user:
-#  ********************************************************************************************************************
-
 
 # set IP address of source machine for sending, and dummy port (just filler to test on VMs on same network)
 
 CUDP_IP = "0.0.0.0"
 CUDP_PORT = 0
 
-IP_address_src = '192.168.1.2'
-IP_address_dst = '192.168.1.3'
+IP_address_src = '192.168.1.1'
+IP_address_dst = '192.168.1.2'
 # set the length of max read (e.g. cadet can only send 77 bytes at a time)
 readLen = 77
 # set the length of the actual data packet (readLen - IPv4 header - NERDP header)
 dataPacketLen = readLen - 20 -4
-# to vary the transmission rate we establish the timeout expecter per packet
-# this is the time we expect for a packet to require for roundtrip 
-# THIS IS VERY DEPENDENT ON RADIO, HARDWARE, ETC. ADJUST FOR YOUR DEVICE
-packetDelay = 0.5
-#  ********************************************************************************************************************
-#  ********************************************************************************************************************
-
-
 # create a raw socket that will bind to the network interface, this will receive all raw packets at the OSI layer 3
-
 s = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_RAW)
 
 try:
@@ -103,6 +88,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         # REQ packets get sent from port 0 to port0
         srcport = 0
         dstport = 0
+        # Store the source port on the upper 4 bits of the portbyte, and the destination port on the lower 4 bits
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
@@ -116,6 +102,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         # ACK packets get sent from port 0 to port 0
         srcport = 0
         dstport = 0
+        # Store the source port on the upper 4 bits of the portbyte, and the destination port on the lower 4 bits
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
@@ -128,6 +115,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         # FIN packets get sent from port 0 to port 0
         srcport = 0
         dstport = 0
+        # Store the source port on the upper 4 bits of the portbyte, and the destination port on the lower 4 bits
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
@@ -141,6 +129,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         # SYN packets get sent from port 0 to port 0
         srcport = 0
         dstport = 0
+        # Store the source port on the upper 4 bits of the portbyte, and the destination port on the lower 4 bits
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
@@ -153,6 +142,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         # MIS packets get sent from port 0 to port 0
         srcport = 0
         dstport = 0
+        # Store the source port on the upper 4 bits of the portbyte, and the destination port on the lower 4 bits
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
@@ -166,6 +156,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         # CON packets get sent from port 0 to port 0 
         srcport = 0
         dstport = 0
+        # Store the source port on the upper 4 bits of the portbyte, and the destination port on the lower 4 bits
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
@@ -179,6 +170,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         # packets get sent from port 2 to requested port
         srcport = 2 
         dstport = reqPort
+        # Store the source port on the upper 4 bits of the portbyte, and the destination port on the lower 4 bits
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
@@ -191,6 +183,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         # SOH packets get sent from port 1 to port 1
         srcport = 1 
         dstport = 1
+        # Store the source port on the upper 4 bits of the portbyte, and the destination port on the lower 4 bits
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
@@ -203,6 +196,7 @@ def sendPacket(IP_address_dst,IP_address_src, packetID, packetType, payload, req
         # SOH packets get sent from port 1 to port 1
         srcport = 1 
         dstport = 1
+        # Store the source port on the upper 4 bits of the portbyte, and the destination port on the lower 4 bits
         portByte = (srcport<<4)+dstport
 
         checksum = 0 # TODO: write a function to calculate checksum of payload
@@ -286,47 +280,13 @@ def main():
                     # if we have already sent the 255 packets and we have not sent the total object size
                     # we must send a SYN
                     else:
-                        # counter for the number of SYN retransmits
-                        synCounter = 0
                         while True:
-                            # SYN packet retranmsission logic (timeout = packetDelay * number of packets sent +1)
-                            if synCounter == 0:
-                                # send SYN
-                                # SYN packet has a null payload
-                                payload = '0'
-                                payload = payload.encode('ascii')
-                                # increase the synCounter
-                                synCounter +=1 
-                                # Send the SYN packet to port 0
-                                sendPacket(IP_address_dst, IP_address_src, 255, 'SYN', payload, 0)
-                                # long wait for the retransmit
-                                synRetransmit = select.select([s],[],[packetDelay*257])
-
-                            if 0 < synCounter < 3:
-                                # send SYN
-                                # SYN packet has a null payload
-                                payload = '0'
-                                payload = payload.encode('ascii')
-                                # increase the synCounter
-                                synCounter +=1 
-                                # Send the SYN packet to port 0
-                                sendPacket(IP_address_dst, IP_address_src, 255, 'SYN', payload, 0)
-                                # for retransmits we want short wait 
-                                synRetransmit = select.select([s],[],[packetDelay*2])
-
-                            if synCounter >= 3:
-                                print('MAX RETRANSMITS REACHED')
-                                break
-                            # if we dont get data within the timeout we retransmit 2 more syns at lower wait
-
-                            # if we dont get any data, we go back to send the syn 
-                            if not synRetransmit[0]:
-                                continue
-
-                            # if we do get data, we  then recieve it and process the packet. Every SYN retransmit will have a short wait
-                            
-                            # TODO make the syn after MIS packet retransmission dynamic
-
+                            # send SYN
+                            # SYN packet has a null payload
+                            payload = '0'
+                            payload = payload.encode('ascii')
+                            # Send the SYN packet to port 0
+                            sendPacket(IP_address_dst, IP_address_src, 255, 'SYN', payload, 0)
                             # listen for MIS packet
                             packetRcvd = s.recvfrom(readLen)
                             # again get rid of IP header stuff
@@ -491,5 +451,4 @@ def main():
 # *******************************
 if __name__ == '__main__':
     main()
-
 
